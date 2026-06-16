@@ -242,8 +242,17 @@
       if (entry) {
         entry.likes = likes;
         const likesEl = list.querySelector(`[data-id="${id}"] .item-likes`);
-        if (likesEl) likesEl.textContent = `💜 ${likes}`;
+        if (likesEl) likesEl.innerHTML = `💜 ${likes} &nbsp; 💬 ${entry.commentCount || 0}`;
         renderRanking();
+      }
+    });
+
+    socket.on('new-comment', ({ requestId, comment }) => {
+      const entry = allRequests.find(r => r.id === requestId);
+      if (entry) {
+        entry.commentCount = (entry.commentCount || 0) + 1;
+        const likesEl = list.querySelector(`[data-id="${requestId}"] .item-likes`);
+        if (likesEl) likesEl.innerHTML = `💜 ${entry.likes} &nbsp; 💬 ${entry.commentCount}`;
       }
     });
 
@@ -259,7 +268,7 @@
         </div>
         <div class="item-right">
           <div class="item-time">${entry.time}</div>
-          <div class="item-likes">💜 ${entry.likes}</div>
+          <div class="item-likes">💜 ${entry.likes} &nbsp; 💬 ${entry.commentCount || 0}</div>
           <button class="copy-btn" data-text="${esc(entry.artist)} - ${esc(entry.title)}">복사</button>
         </div>
       `;

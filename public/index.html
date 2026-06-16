@@ -204,6 +204,73 @@
     .like-icon { font-size: 16px; line-height: 1; }
     .like-count { font-size: 11px; color: #666; font-weight: 700; }
     .like-btn.liked .like-count { color: #6c63ff; }
+
+    .comment-toggle {
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .comment-toggle:hover { color: #aaa; }
+
+    .comment-section {
+      display: none;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #222;
+    }
+
+    .comment-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+
+    .comment-item {
+      background: #111;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .comment-time { font-size: 11px; color: #444; white-space: nowrap; flex-shrink: 0; }
+
+    .comment-form { display: flex; gap: 6px; }
+
+    .comment-input {
+      flex: 1;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #fff;
+      outline: none;
+      margin-bottom: 0;
+    }
+    .comment-input:focus { border-color: #6c63ff; }
+    .comment-input::placeholder { color: #3a3a3a; }
+
+    .comment-submit {
+      background: #6c63ff;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      width: auto;
+    }
+    .comment-submit:hover { background: #5a52e0; }
   </style>
 </head>
 <body>
@@ -287,17 +354,31 @@
         const div = document.createElement('div');
         div.className = 'rank-item';
         div.dataset.id = entry.id;
+        div.style.flexDirection = 'column';
+        div.style.alignItems = 'stretch';
         const liked = isLiked(entry.id);
         div.innerHTML = `
-          <div class="rank-num ${idx < 3 ? 'top' : ''}">${idx + 1}</div>
-          <div class="rank-info">
-            <div class="rank-title">${esc(entry.title)}</div>
-            <div class="rank-artist">${esc(entry.artist)}</div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div class="rank-num ${idx < 3 ? 'top' : ''}">${idx + 1}</div>
+            <div class="rank-info">
+              <div class="rank-title">${esc(entry.title)}</div>
+              <div class="rank-artist">${esc(entry.artist)}</div>
+            </div>
+            <button class="like-btn ${liked ? 'liked' : ''}" data-id="${entry.id}">
+              <span class="like-icon">${liked ? '💜' : '🤍'}</span>
+              <span class="like-count">${entry.likes}</span>
+            </button>
           </div>
-          <button class="like-btn ${liked ? 'liked' : ''}" data-id="${entry.id}">
-            <span class="like-icon">${liked ? '💜' : '🤍'}</span>
-            <span class="like-count">${entry.likes}</span>
+          <button class="comment-toggle" data-id="${entry.id}">
+            💬 댓글 ${entry.commentCount || 0}개
           </button>
+          <div class="comment-section" id="comments-${entry.id}">
+            <div class="comment-list" id="comment-list-${entry.id}"></div>
+            <div class="comment-form">
+              <input class="comment-input" placeholder="댓글 남기기..." data-id="${entry.id}" maxlength="100" />
+              <button class="comment-submit" data-id="${entry.id}">등록</button>
+            </div>
+          </div>
         `;
         rankList.appendChild(div);
       });
@@ -329,6 +410,79 @@
       const entry = allRequests.find(r => r.id === id);
       if (entry) { entry.likes = likes; renderRanking(); }
     });
+
+    socket.on('new-comment', ({ requestId, comment }) => {
+      const entry = allRequests.find(r => r.id === requestId);
+      if (entry) entry.commentCount = (entry.commentCount || 0) + 1;
+      appendComment(requestId, comment);
+      // 토글 버튼 카운트 업데이트
+      const toggle = document.querySelector(`.comment-toggle[data-id="${requestId}"]`);
+      if (toggle) toggle.textContent = `💬 댓글 ${entry ? entry.commentCount : ''}개`;
+    });
+
+    // 댓글 토글
+    rankList.addEventListener('click', async (e) => {
+      const toggle = e.target.closest('.comment-toggle');
+      if (toggle) {
+        const id = parseInt(toggle.dataset.id);
+        const section = document.getElementById(`comments-${id}`);
+        if (!section) return;
+        const isOpen = section.style.display === 'block';
+        section.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen && !section.dataset.loaded) {
+          section.dataset.loaded = '1';
+          const res = await fetch(`/api/comments/${id}`);
+          const comments = await res.json();
+          comments.forEach(c => appendComment(id, c));
+        }
+        return;
+      }
+
+      // 댓글 등록
+      const submitBtn = e.target.closest('.comment-submit');
+      if (submitBtn) {
+        const id = parseInt(submitBtn.dataset.id);
+        const input = document.querySelector(`.comment-input[data-id="${id}"]`);
+        if (!input || !input.value.trim()) return;
+        submitBtn.disabled = true;
+        try {
+          const res = await fetch(`/api/comment/${id}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: input.value.trim() }),
+          });
+          if (res.ok) { input.value = ''; }
+          else { const d = await res.json(); alert(d.error); }
+        } catch { alert('오류가 발생했어요.'); }
+        submitBtn.disabled = false;
+      }
+    });
+
+    // 댓글 입력창 엔터
+    rankList.addEventListener('keydown', async (e) => {
+      if (e.key !== 'Enter') return;
+      const input = e.target.closest('.comment-input');
+      if (!input) return;
+      const id = parseInt(input.dataset.id);
+      if (!input.value.trim()) return;
+      try {
+        const res = await fetch(`/api/comment/${id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: input.value.trim() }),
+        });
+        if (res.ok) { input.value = ''; }
+      } catch {}
+    });
+
+    function appendComment(requestId, comment) {
+      const list = document.getElementById(`comment-list-${requestId}`);
+      if (!list) return;
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      div.innerHTML = `<span>${esc(comment.content)}</span><span class="comment-time">${comment.time}</span>`;
+      list.appendChild(div);
+    }
 
     function esc(str) {
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

@@ -14,6 +14,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const requests = [];
 const rateLimitMap = new Map(); // ip -> 마지막 신청 시각
 const likesMap = new Map();     // id -> 좋아요 누른 IP Set
+const commentsMap = new Map();  // id -> [{ id, content, time }]
 
 const RATE_LIMIT_MS = 4 * 60 * 1000; // 4분
 
@@ -50,6 +51,7 @@ app.post('/api/request', (req, res) => {
 
   requests.push(entry);
   likesMap.set(entry.id, new Set());
+  commentsMap.set(entry.id, []);
   rateLimitMap.set(ip, now);
 
   io.emit('new-request', entry);
@@ -77,6 +79,33 @@ app.post('/api/like/:id', (req, res) => {
 
   io.emit('like-update', { id, likes: entry.likes });
   res.json({ likes: entry.likes, liked });
+});
+
+app.post('/api/comment/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const entry = requests.find(r => r.id === id);
+  if (!entry) return res.status(404).json({ error: '없는 신청곡이에요.' });
+
+  const { content } = req.body;
+  if (!content || !content.trim()) return res.status(400).json({ error: '댓글 내용을 입력해주세요.' });
+
+  const comment = {
+    id: Date.now(),
+    content: content.trim(),
+    time: new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+  };
+
+  if (!commentsMap.has(id)) commentsMap.set(id, []);
+  commentsMap.get(id).push(comment);
+  entry.commentCount = (entry.commentCount || 0) + 1;
+
+  io.emit('new-comment', { requestId: id, comment });
+  res.json(comment);
+});
+
+app.get('/api/comments/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  res.json(commentsMap.get(id) || []);
 });
 
 app.get('/api/requests', (req, res) => {

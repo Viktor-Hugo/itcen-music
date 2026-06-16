@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const QRCode = require('qrcode');
 
 const app = express();
 const server = http.createServer(app);
@@ -106,6 +107,20 @@ app.post('/api/comment/:id', (req, res) => {
 app.get('/api/comments/:id', (req, res) => {
   const id = parseInt(req.params.id);
   res.json(commentsMap.get(id) || []);
+});
+
+app.get('/api/qr', async (req, res) => {
+  const base = `${req.protocol}://${req.get('host')}`;
+  try {
+    const dataUrl = await QRCode.toDataURL(base, {
+      width: 300,
+      margin: 2,
+      color: { dark: '#1a1a2e', light: '#ffffff' },
+    });
+    res.json({ qr: dataUrl, url: base });
+  } catch (err) {
+    res.status(500).json({ error: 'QR 생성 실패' });
+  }
 });
 
 app.get('/api/requests', (req, res) => {

@@ -151,6 +151,72 @@
     .rank-artist { font-size: 12px; color: #9ca3af; margin-top: 2px; }
     .rank-likes { font-size: 13px; color: #6c63ff; font-weight: 700; flex-shrink: 0; }
     .rank-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+
+    /* QR 모달 */
+    .qr-btn {
+      background: #fff;
+      border: 1.5px solid #e4e0ff;
+      border-radius: 8px;
+      color: #6c63ff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .qr-btn:hover { background: #ede9ff; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,26,46,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 20px;
+      padding: 36px 32px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(108,99,255,0.2);
+      max-width: 320px;
+      width: 90%;
+    }
+
+    .modal h2 { font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+    .modal p { font-size: 13px; color: #9ca3af; margin-bottom: 20px; }
+
+    .modal img { width: 200px; height: 200px; border-radius: 12px; margin-bottom: 16px; }
+
+    .modal-url {
+      background: #f3f1ff;
+      border: 1.5px solid #e4e0ff;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #6c63ff;
+      font-weight: 600;
+      word-break: break-all;
+      margin-bottom: 16px;
+    }
+
+    .modal-close {
+      width: 100%;
+      background: #f3f1ff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6c63ff;
+      cursor: pointer;
+    }
+    .modal-close:hover { background: #ede9ff; }
   </style>
 </head>
 <body>
@@ -159,8 +225,22 @@
       <h1>🎵 신청곡 수신</h1>
       <p>강사용 — 실시간 수신 대시보드</p>
     </div>
-    <div class="badge" id="count">0곡</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="qr-btn" id="qrBtn">📱 QR 코드</button>
+      <div class="badge" id="count">0곡</div>
+    </div>
   </header>
+
+  <!-- QR 모달 -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2>📱 신청 링크 QR</h2>
+      <p>임직원분들이 스캔하면 바로 접속돼요</p>
+      <img id="qrImg" src="" alt="QR 코드" />
+      <div class="modal-url" id="qrUrl">불러오는 중...</div>
+      <button class="modal-close" id="modalClose">닫기</button>
+    </div>
+  </div>
 
   <button class="notif-btn" id="notifBtn">🔔 브라우저 알림 켜기</button>
 
@@ -321,6 +401,31 @@
       notifBtn.classList.add('granted');
       notifBtn.disabled = true;
     }
+
+    // QR 모달
+    const qrBtn = document.getElementById('qrBtn');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalClose = document.getElementById('modalClose');
+    const qrImg = document.getElementById('qrImg');
+    const qrUrl = document.getElementById('qrUrl');
+
+    qrBtn.addEventListener('click', async () => {
+      modalOverlay.classList.add('open');
+      if (qrImg.src && qrImg.src !== window.location.href) return;
+      try {
+        const res = await fetch('/api/qr');
+        const { qr, url } = await res.json();
+        qrImg.src = qr;
+        qrUrl.textContent = url;
+      } catch {
+        qrUrl.textContent = 'QR 생성 실패';
+      }
+    });
+
+    modalClose.addEventListener('click', () => modalOverlay.classList.remove('open'));
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) modalOverlay.classList.remove('open');
+    });
 
     // 복사 버튼 이벤트 (이벤트 위임)
     document.addEventListener('click', async (e) => {

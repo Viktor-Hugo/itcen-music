@@ -9,34 +9,32 @@
 
     body {
       min-height: 100vh;
-      background: #0f0f0f;
+      background: #f3f1ff;
       font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-      color: #fff;
+      color: #1a1a2e;
       padding: 32px 24px 60px;
     }
 
-    .wrap {
-      max-width: 480px;
-      margin: 0 auto;
-    }
+    .wrap { max-width: 480px; margin: 0 auto; }
 
     /* 신청 폼 카드 */
     .card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #e4e0ff;
+      border-radius: 20px;
       padding: 36px 28px;
       margin-bottom: 12px;
+      box-shadow: 0 4px 24px rgba(108,99,255,0.08);
     }
 
     .emoji { font-size: 32px; margin-bottom: 10px; }
-    h1 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
-    .sub { font-size: 13px; color: #555; margin-bottom: 20px; }
+    h1 { font-size: 20px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+    .sub { font-size: 13px; color: #9ca3af; margin-bottom: 20px; }
 
     /* 금지 장르 공지 */
     .notice {
-      background: #1f1510;
-      border: 1px solid #4a2e10;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
       border-radius: 10px;
       padding: 12px 14px;
       margin-bottom: 24px;
@@ -45,22 +43,17 @@
     .notice-title {
       font-size: 12px;
       font-weight: 700;
-      color: #f97316;
+      color: #ea580c;
       margin-bottom: 6px;
     }
 
-    .notice ul {
-      list-style: none;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .notice ul { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 
     .notice li {
       font-size: 12px;
-      background: #2a1a08;
-      color: #fb923c;
-      border: 1px solid #7c3a10;
+      background: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fdba74;
       border-radius: 999px;
       padding: 3px 10px;
     }
@@ -69,25 +62,25 @@
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: #888;
+      color: #6b7280;
       margin-bottom: 7px;
     }
 
     input {
       width: 100%;
-      background: #111;
-      border: 1px solid #2a2a2a;
+      background: #fafafa;
+      border: 1.5px solid #e5e7eb;
       border-radius: 10px;
       padding: 13px 14px;
       font-size: 15px;
-      color: #fff;
+      color: #1a1a2e;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s;
       margin-bottom: 16px;
     }
 
-    input::placeholder { color: #3a3a3a; }
-    input:focus { border-color: #6c63ff; }
+    input::placeholder { color: #d1d5db; }
+    input:focus { border-color: #6c63ff; box-shadow: 0 0 0 3px rgba(108,99,255,0.12); }
 
     button[type="submit"] {
       width: 100%;
@@ -100,30 +93,31 @@
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 12px rgba(108,99,255,0.3);
     }
 
     button[type="submit"]:hover { background: #5a52e0; }
     button[type="submit"]:active { transform: scale(0.98); }
-    button[type="submit"]:disabled { background: #2a2a2a; color: #555; cursor: not-allowed; }
+    button[type="submit"]:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; box-shadow: none; }
 
     .success { display: none; text-align: center; padding: 16px 0 4px; }
     .success .check { font-size: 40px; margin-bottom: 10px; }
-    .success p { color: #888; font-size: 14px; line-height: 1.6; }
-    .success strong { color: #fff; }
+    .success p { color: #6b7280; font-size: 14px; line-height: 1.6; }
+    .success strong { color: #1a1a2e; }
 
     .again {
       margin-top: 16px;
       width: 100%;
-      background: #222;
-      color: #888;
-      border: 1px solid #2a2a2a;
+      background: #f9fafb;
+      color: #6b7280;
+      border: 1.5px solid #e5e7eb;
       border-radius: 10px;
       padding: 12px;
       font-size: 13px;
       cursor: pointer;
+      transition: background 0.15s;
     }
-
-    .again:hover { background: #2a2a2a; }
+    .again:hover { background: #f3f4f6; }
 
     /* 랭킹 */
     .ranking-header {
@@ -133,26 +127,22 @@
       margin: 28px 0 14px;
     }
 
-    .ranking-header h2 { font-size: 16px; font-weight: 700; }
-    .ranking-count { font-size: 13px; color: #555; }
+    .ranking-header h2 { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+    .ranking-count { font-size: 13px; color: #9ca3af; }
 
-    .empty-rank {
-      text-align: center;
-      padding: 40px 0;
-      color: #333;
-      font-size: 14px;
-    }
+    .empty-rank { text-align: center; padding: 40px 0; color: #d1d5db; font-size: 14px; }
 
     .rank-list { display: flex; flex-direction: column; gap: 8px; }
 
     .rank-item {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 12px;
+      background: #fff;
+      border: 1.5px solid #e4e0ff;
+      border-radius: 14px;
       padding: 14px 16px;
       display: flex;
       align-items: center;
       gap: 14px;
+      box-shadow: 0 2px 8px rgba(108,99,255,0.05);
       animation: fadeIn 0.3s ease;
     }
 
@@ -161,54 +151,37 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .rank-num {
-      font-size: 13px;
-      font-weight: 700;
-      color: #444;
-      width: 20px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
+    .rank-num { font-size: 13px; font-weight: 700; color: #d1d5db; width: 20px; text-align: center; flex-shrink: 0; }
     .rank-num.top { color: #6c63ff; }
 
     .rank-info { flex: 1; min-width: 0; }
-
-    .rank-title {
-      font-size: 14px;
-      font-weight: 700;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .rank-artist { font-size: 12px; color: #666; margin-top: 2px; }
+    .rank-title { font-size: 14px; font-weight: 700; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rank-artist { font-size: 12px; color: #9ca3af; margin-top: 2px; }
 
     .like-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 2px;
-      background: none;
-      border: 1px solid #2a2a2a;
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
       border-radius: 10px;
       padding: 6px 12px;
       cursor: pointer;
       transition: all 0.15s;
       flex-shrink: 0;
     }
-
-    .like-btn:hover { border-color: #6c63ff; }
-    .like-btn.liked { border-color: #6c63ff; background: #1a1730; }
+    .like-btn:hover { border-color: #6c63ff; background: #f3f1ff; }
+    .like-btn.liked { border-color: #6c63ff; background: #ede9ff; }
 
     .like-icon { font-size: 16px; line-height: 1; }
-    .like-count { font-size: 11px; color: #666; font-weight: 700; }
+    .like-count { font-size: 11px; color: #9ca3af; font-weight: 700; }
     .like-btn.liked .like-count { color: #6c63ff; }
 
     .comment-toggle {
       background: none;
       border: none;
-      color: #555;
+      color: #9ca3af;
       font-size: 12px;
       cursor: pointer;
       padding: 4px 0;
@@ -216,47 +189,49 @@
       align-items: center;
       gap: 4px;
       margin-top: 8px;
+      transition: color 0.15s;
     }
-    .comment-toggle:hover { color: #aaa; }
+    .comment-toggle:hover { color: #6c63ff; }
 
     .comment-section {
       display: none;
       margin-top: 10px;
       padding-top: 10px;
-      border-top: 1px solid #222;
+      border-top: 1px solid #f3f4f6;
     }
 
     .comment-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
 
     .comment-item {
-      background: #111;
+      background: #f9fafb;
       border-radius: 8px;
       padding: 8px 12px;
       font-size: 13px;
-      color: #ccc;
+      color: #374151;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 8px;
     }
 
-    .comment-time { font-size: 11px; color: #444; white-space: nowrap; flex-shrink: 0; }
+    .comment-time { font-size: 11px; color: #d1d5db; white-space: nowrap; flex-shrink: 0; }
 
     .comment-form { display: flex; gap: 6px; }
 
     .comment-input {
       flex: 1;
-      background: #111;
-      border: 1px solid #2a2a2a;
+      background: #f9fafb;
+      border: 1.5px solid #e5e7eb;
       border-radius: 8px;
       padding: 8px 12px;
       font-size: 13px;
-      color: #fff;
+      color: #1a1a2e;
       outline: none;
       margin-bottom: 0;
+      transition: border-color 0.2s;
     }
     .comment-input:focus { border-color: #6c63ff; }
-    .comment-input::placeholder { color: #3a3a3a; }
+    .comment-input::placeholder { color: #d1d5db; }
 
     .comment-submit {
       background: #6c63ff;
@@ -269,6 +244,7 @@
       cursor: pointer;
       white-space: nowrap;
       width: auto;
+      transition: background 0.15s;
     }
     .comment-submit:hover { background: #5a52e0; }
   </style>

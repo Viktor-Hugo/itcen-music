@@ -124,6 +124,20 @@
     .item-time { font-size: 11px; color: #444; }
     .item-likes { font-size: 12px; color: #6c63ff; font-weight: 700; }
 
+    .copy-btn {
+      background: #222;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #888;
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover { background: #2a2a2a; color: #ccc; }
+    .copy-btn.copied { border-color: #4ade80; color: #4ade80; }
+
     /* 랭킹 탭 */
     .rank-list { display: flex; flex-direction: column; gap: 8px; }
 
@@ -143,6 +157,7 @@
     .rank-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .rank-artist { font-size: 12px; color: #666; margin-top: 2px; }
     .rank-likes { font-size: 13px; color: #6c63ff; font-weight: 700; flex-shrink: 0; }
+    .rank-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -245,6 +260,7 @@
         <div class="item-right">
           <div class="item-time">${entry.time}</div>
           <div class="item-likes">💜 ${entry.likes}</div>
+          <button class="copy-btn" data-text="${esc(entry.artist)} - ${esc(entry.title)}">복사</button>
         </div>
       `;
       list.prepend(div);
@@ -265,7 +281,10 @@
             <div class="rank-title">${esc(entry.title)}</div>
             <div class="rank-artist">${esc(entry.artist)}</div>
           </div>
-          <div class="rank-likes">💜 ${entry.likes}</div>
+          <div class="rank-right">
+            <div class="rank-likes">💜 ${entry.likes}</div>
+            <button class="copy-btn" data-text="${esc(entry.artist)} - ${esc(entry.title)}">복사</button>
+          </div>
         `;
         rankList.appendChild(div);
       });
@@ -300,6 +319,21 @@
       notifBtn.classList.add('granted');
       notifBtn.disabled = true;
     }
+
+    // 복사 버튼 이벤트 (이벤트 위임)
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.copy-btn');
+      if (!btn) return;
+      const text = btn.dataset.text;
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '✅ 복사됨';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '복사'; btn.classList.remove('copied'); }, 1500);
+      } catch {
+        prompt('직접 복사해주세요:', text);
+      }
+    });
 
     fetch('/api/requests')
       .then(r => r.json())

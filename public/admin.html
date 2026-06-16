@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>신청곡 수신 — 강사용</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0f0f0f;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+      color: #fff;
+      padding: 32px 24px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .title-wrap h1 { font-size: 22px; font-weight: 700; }
+    .title-wrap p { font-size: 13px; color: #555; margin-top: 4px; }
+
+    .badge {
+      background: #6c63ff;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 999px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #333;
+    }
+
+    .dot.connected { background: #4ade80; }
+
+    .empty {
+      text-align: center;
+      padding: 80px 0;
+      color: #444;
+      font-size: 15px;
+    }
+
+    .list { display: flex; flex-direction: column; gap: 12px; }
+
+    .item {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .item.new { border-color: #6c63ff; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .item-info { flex: 1; min-width: 0; }
+
+    .item-title {
+      font-size: 16px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .item-artist {
+      font-size: 13px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    .item-time {
+      font-size: 12px;
+      color: #444;
+      white-space: nowrap;
+    }
+
+    .notif-btn {
+      display: block;
+      margin: 0 auto 24px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #aaa;
+      font-size: 13px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+
+    .notif-btn:hover { background: #222; }
+    .notif-btn.granted { color: #4ade80; border-color: #4ade80; cursor: default; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-wrap">
+      <h1>🎵 신청곡 수신</h1>
+      <p>새 신청이 들어오면 실시간으로 표시돼요</p>
+    </div>
+    <div class="badge" id="count">0곡</div>
+  </header>
+
+  <button class="notif-btn" id="notifBtn">🔔 브라우저 알림 켜기</button>
+
+  <div class="status">
+    <div class="dot" id="dot"></div>
+    <span id="statusText">연결 중...</span>
+  </div>
+
+  <div class="empty" id="empty">아직 신청곡이 없어요</div>
+  <div class="list" id="list"></div>
+
+  <audio id="beep" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbxpY3IjFjl9XkxJg0IzFll9XexJg2IzFkl9PcxJg0IzFkl9PcxJkzIzFkl9PcxJgzIjFkl9PcxJgzIjFkl9PcxJgzIjFkl9TcxJgzIjFkl9TcxJgzIjFkl9TcxJgzIjFkl9TcxJgzIjFkl9TcxJgzIjFkl9TcxJgzIjFkl9TcxJg=" preload="auto"></audio>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const list = document.getElementById('list');
+    const empty = document.getElementById('empty');
+    const count = document.getElementById('count');
+    const dot = document.getElementById('dot');
+    const statusText = document.getElementById('statusText');
+    const notifBtn = document.getElementById('notifBtn');
+    const beep = document.getElementById('beep');
+
+    let total = 0;
+
+    socket.on('connect', () => {
+      dot.classList.add('connected');
+      statusText.textContent = '실시간 연결됨';
+    });
+
+    socket.on('disconnect', () => {
+      dot.classList.remove('connected');
+      statusText.textContent = '연결 끊김 — 재연결 중...';
+    });
+
+    socket.on('new-request', (entry) => {
+      addItem(entry, true);
+      playBeep();
+      showNotification(entry);
+    });
+
+    function addItem(entry, isNew = false) {
+      empty.style.display = 'none';
+      total++;
+      count.textContent = `${total}곡`;
+
+      const div = document.createElement('div');
+      div.className = isNew ? 'item new' : 'item';
+      div.innerHTML = `
+        <div class="item-info">
+          <div class="item-title">${escape(entry.title)}</div>
+          <div class="item-artist">${escape(entry.artist)}</div>
+        </div>
+        <div class="item-time">${entry.time}</div>
+      `;
+
+      list.prepend(div);
+
+      if (isNew) {
+        setTimeout(() => div.classList.remove('new'), 2000);
+      }
+    }
+
+    function escape(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function playBeep() {
+      try { beep.currentTime = 0; beep.play(); } catch {}
+    }
+
+    function showNotification(entry) {
+      if (Notification.permission === 'granted') {
+        new Notification('🎵 새 신청곡', {
+          body: `${entry.title} — ${entry.artist}`,
+          icon: '/favicon.ico',
+        });
+      }
+    }
+
+    notifBtn.addEventListener('click', async () => {
+      if (Notification.permission === 'granted') return;
+      const perm = await Notification.requestPermission();
+      if (perm === 'granted') {
+        notifBtn.textContent = '✅ 브라우저 알림 켜짐';
+        notifBtn.classList.add('granted');
+        notifBtn.disabled = true;
+      }
+    });
+
+    if (Notification.permission === 'granted') {
+      notifBtn.textContent = '✅ 브라우저 알림 켜짐';
+      notifBtn.classList.add('granted');
+      notifBtn.disabled = true;
+    }
+
+    // 기존 신청곡 불러오기
+    fetch('/api/requests')
+      .then(r => r.json())
+      .then(data => {
+        data.forEach(entry => addItem(entry, false));
+      });
+  </script>
+</body>
+</html>
